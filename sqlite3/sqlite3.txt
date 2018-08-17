@@ -1,0 +1,3 @@
+.tables -- 列出所有表的名称
+.header(s) ON -- 开启或关闭头部显示。
+.mode column -- 左对齐的列
