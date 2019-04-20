@@ -14,9 +14,11 @@
 #define VOS_COL_BIRTH   4
 #define VOS_COL_DEATH   5
 
+#define VOS_VOID void
+
 typedef unsigned int  VOS_UINT32;
 typedef int           VOS_INT32;
-typedef char          VOS_CHA;
+typedef char          VOS_CHAR;
 typedef unsigned char VOS_UINT8;
 typedef unsigned long VOS_UINT64;
 
@@ -26,6 +28,7 @@ typedef enum {
 } ENUM_COL_TYPE;
 
 MYSQL *OpenDatabase();
+VOS_VOID VOS_SqlQuery(MYSQL *pMysqlHandler, VOS_UINT8 *pucStmt);
 
 int main()
 {
@@ -40,26 +43,12 @@ int main()
     VOS_UINT32 udwFieldIndex = VOS_NULL;
 
     pMysqlHandler = OpenDatabase();
-
-    dwRetVal = mysql_query(pMysqlHandler, "select * from pet;");
-    printf("ret_val = %d\n", dwRetVal);
-
-    pMysqlResult = mysql_store_result(pMysqlHandler);
-    udwRowNum = mysql_num_rows(pMysqlResult);
-    printf("row num = %u\n", udwRowNum); 
-
-    udwNumFields = mysql_num_fields(pMysqlResult);
-    for(udwRowIndex = 1; udwRowIndex <= udwRowNum; udwRowIndex++)
+    if(VOS_NULL == pMysqlHandler)
     {
-        row = mysql_fetch_row(pMysqlResult);
-        puddwLengths = mysql_fetch_lengths(pMysqlResult);
-        for(udwFieldIndex = 0; udwFieldIndex < udwNumFields; udwFieldIndex++)
-        {
-            printf("col %d , length is %lu, value = %s\n", udwFieldIndex, puddwLengths[udwFieldIndex], row[udwFieldIndex]);
-        }
+        return VOS_FAILURE;
     }
 
-    mysql_free_result(pMysqlResult);
+    VOS_SqlQuery(pMysqlHandler, "SELECT * from pet");
 
     return 0;
 }
@@ -83,4 +72,36 @@ MYSQL *OpenDatabase()
     }
 
     return pHandler;
+}
+
+VOS_VOID VOS_SqlQuery(MYSQL *pMysqlHandler, VOS_UINT8 *pucStmt)
+{
+    VOS_INT32  dwRetVal = VOS_OK;
+    MYSQL_RES  *pMysqlResult  = VOS_NULL;
+    VOS_UINT32 udwNumFields = VOS_NULL;
+    MYSQL_ROW  row;
+    VOS_UINT32 udwRowNum = VOS_NULL;
+    VOS_UINT32 udwRowIndex = VOS_NULL;
+    VOS_UINT64 *puddwLengths = VOS_NULL;
+    VOS_UINT32 udwFieldIndex = VOS_NULL;
+
+    dwRetVal = mysql_query(pMysqlHandler, (VOS_CHAR *)pucStmt);
+    printf("ret_val = %d\n", dwRetVal);
+
+    pMysqlResult = mysql_store_result(pMysqlHandler);
+    udwRowNum = mysql_num_rows(pMysqlResult);
+    printf("row num = %u\n", udwRowNum); 
+
+    udwNumFields = mysql_num_fields(pMysqlResult);
+    for(udwRowIndex = 1; udwRowIndex <= udwRowNum; udwRowIndex++)
+    {
+        row = mysql_fetch_row(pMysqlResult);
+        puddwLengths = mysql_fetch_lengths(pMysqlResult);
+        for(udwFieldIndex = 0; udwFieldIndex < udwNumFields; udwFieldIndex++)
+        {
+            printf("col %d , length is %lu, value = %s\n", udwFieldIndex, puddwLengths[udwFieldIndex], row[udwFieldIndex]);
+        }
+    }
+
+    mysql_free_result(pMysqlResult);
 }
