@@ -28,19 +28,11 @@ typedef enum {
 } ENUM_COL_TYPE;
 
 MYSQL *OpenDatabase();
-VOS_VOID VOS_SqlQuery(MYSQL *pMysqlHandler, VOS_UINT8 *pucStmt);
+VOS_VOID VOS_SqlQuery(MYSQL *pMysqlHandler, VOS_CHAR *pcStmt);
 
 int main()
 {
-    VOS_INT32  dwRetVal = VOS_OK;
     MYSQL      *pMysqlHandler = VOS_NULL;
-    MYSQL_RES  *pMysqlResult  = VOS_NULL;
-    VOS_UINT32 udwNumFields = VOS_NULL;
-    MYSQL_ROW  row;
-    VOS_UINT32 udwRowNum = VOS_NULL;
-    VOS_UINT32 udwRowIndex = VOS_NULL;
-    VOS_UINT64 *puddwLengths = VOS_NULL;
-    VOS_UINT32 udwFieldIndex = VOS_NULL;
 
     pMysqlHandler = OpenDatabase();
     if(VOS_NULL == pMysqlHandler)
@@ -74,7 +66,7 @@ MYSQL *OpenDatabase()
     return pHandler;
 }
 
-VOS_VOID VOS_SqlQuery(MYSQL *pMysqlHandler, VOS_UINT8 *pucStmt)
+VOS_VOID VOS_SqlQuery(MYSQL *pMysqlHandler, VOS_CHAR *pcStmt)
 {
     VOS_INT32  dwRetVal = VOS_OK;
     MYSQL_RES  *pMysqlResult  = VOS_NULL;
@@ -85,7 +77,7 @@ VOS_VOID VOS_SqlQuery(MYSQL *pMysqlHandler, VOS_UINT8 *pucStmt)
     VOS_UINT64 *puddwLengths = VOS_NULL;
     VOS_UINT32 udwFieldIndex = VOS_NULL;
 
-    dwRetVal = mysql_query(pMysqlHandler, (VOS_CHAR *)pucStmt);
+    dwRetVal = mysql_query(pMysqlHandler, pcStmt);
     printf("ret_val = %d\n", dwRetVal);
 
     pMysqlResult = mysql_store_result(pMysqlHandler);
