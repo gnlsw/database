@@ -40,7 +40,24 @@ int main()
         return VOS_FAILURE;
     }
 
+    VOS_SqlQuery(pMysqlHandler, "show databases");
+    printf("\n");
+    VOS_SqlQuery(pMysqlHandler, "show tables");
+    printf("\n");
+    /* 测试语句错误 */
+    VOS_SqlQuery(pMysqlHandler, "SELECT * from pets");
+    printf("\n");
+    /* 测试删除语句 */
+    VOS_SqlQuery(pMysqlHandler, "DELETE from pet");
+    printf("\n");
+    /* 测试插入语句 */
+    VOS_SqlQuery(pMysqlHandler, "INSERT INTO pet (name, owner, species, sex, birth, death) VALUES ('Fluffy', 'Harold', 'cat', 'f', '1993-02-04', NULL)");
+    printf("\n");
+    VOS_SqlQuery(pMysqlHandler, "INSERT INTO pet (name, owner, species, sex, birth, death) VALUES ('Fluffy', 'Harold', 'cat', 'f', '1993-02-04', NULL)");
+    printf("\n");
+    /* 测试查询语句 */
     VOS_SqlQuery(pMysqlHandler, "SELECT * from pet");
+    printf("\n");
 
     return 0;
 }
@@ -78,9 +95,20 @@ VOS_VOID VOS_SqlQuery(MYSQL *pMysqlHandler, VOS_CHAR *pcStmt)
     VOS_UINT32 udwFieldIndex = VOS_NULL;
 
     dwRetVal = mysql_query(pMysqlHandler, pcStmt);
-    printf("ret_val = %d\n", dwRetVal);
+    printf("%s, ret_val = %d\n", pcStmt, dwRetVal);
+    if(VOS_SUCCESS != dwRetVal)
+    {
+        printf("mysql_query failed, ret val = %d\n", dwRetVal);
+        return;
+    }
 
     pMysqlResult = mysql_store_result(pMysqlHandler);
+    if(VOS_NULL == pMysqlResult)
+    {
+        printf("MYSQL RES is NULL\n");
+        return;
+    }
+
     udwRowNum = mysql_num_rows(pMysqlResult);
     printf("row num = %u\n", udwRowNum); 
 
