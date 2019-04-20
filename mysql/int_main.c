@@ -25,6 +25,8 @@ typedef enum {
     ENUM_INT,
 } ENUM_COL_TYPE;
 
+MYSQL *OpenDatabase();
+
 int main()
 {
     VOS_INT32  dwRetVal = VOS_OK;
@@ -37,15 +39,7 @@ int main()
     VOS_UINT64 *puddwLengths = VOS_NULL;
     VOS_UINT32 udwFieldIndex = VOS_NULL;
 
-    pMysqlHandler = mysql_init(VOS_NULL);
-    if(VOS_NULL == pMysqlHandler)
-    {
-        printf("mysql init failed");
-        return 1;
-    }
-    pMysqlHandler = mysql_real_connect(pMysqlHandler, "localhost",
-                                       "root", "123456", "menagerie",
-                                       VOS_NULL, VOS_NULL, VOS_NULL);
+    pMysqlHandler = OpenDatabase();
 
     dwRetVal = mysql_query(pMysqlHandler, "select * from pet;");
     printf("ret_val = %d\n", dwRetVal);
@@ -68,4 +62,25 @@ int main()
     mysql_free_result(pMysqlResult);
 
     return 0;
+}
+
+MYSQL *OpenDatabase()
+{
+    MYSQL      *pHandler = VOS_NULL;
+
+    pHandler = mysql_init(VOS_NULL);
+    if(VOS_NULL == pHandler)
+    {
+        printf("mysql init failed");
+        return VOS_NULL;
+    }
+
+    if(VOS_NULL == mysql_real_connect(pHandler, "localhost", "root", "123456", "menagerie", 
+                        VOS_NULL, VOS_NULL, VOS_NULL))
+    {
+        printf("mysql real connect failed");
+        return VOS_NULL;
+    }
+
+    return pHandler;
 }
