@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include<string.h>
+#include <string.h>
+#include <stddef.h>
 #include <mysql/mysql.h>
 
 #define VOS_NULL    0
@@ -35,6 +36,12 @@ typedef enum {
 #define PET_BIRTH_LEN   11
 #define PET_DEATH_LEN   11
 
+typedef struct COL_ATTR {
+    unsigned int col_index;
+    unsigned int col_type;
+    unsigned int offset;
+} ST_COL_ATTR;
+
 typedef struct ST_PET {
     VOS_CHAR    szName[PET_NAME_LEN];
     VOS_CHAR    szOwner[PET_OWNER_LEN];
@@ -43,6 +50,15 @@ typedef struct ST_PET {
     VOS_CHAR    szBirth[PET_BIRTH_LEN];
     VOS_CHAR    szDeath[PET_DEATH_LEN];
 } ST_PET;
+
+ST_COL_ATTR g_astPetAttr[] = {
+    { VOS_COL_NAME,      ENUM_CHAR,  offsetof(ST_PET, szName)    },
+    { VOS_COL_OWNER,     ENUM_CHAR,  offsetof(ST_PET, szOwner)   },
+    { VOS_COL_SPECIES,   ENUM_CHAR,  offsetof(ST_PET, szSpecies) },
+    { VOS_COL_SEX,       ENUM_CHAR,  offsetof(ST_PET, szSex)     },
+    { VOS_COL_BIRTH,     ENUM_CHAR,  offsetof(ST_PET, szBirth)   },
+    { VOS_COL_DEATH,     ENUM_CHAR,  offsetof(ST_PET, szDeath)   },
+};
 
 MYSQL *OpenDatabase();
 VOS_VOID DbApiGetPet(MYSQL *pMysqlHandler, ST_PET *pstPet);
@@ -86,11 +102,25 @@ int main()
     return 0;
 }
 
+void ConvertColToChar(char *szCol, void *szVal)
+{
+    if((NULL == szCol) || (NULL == szVal))
+    {
+        return;
+    }
+
+    strcpy((char *)szVal, szCol);
+
+    return;
+}
+
 VOS_VOID DbApiGetPet(MYSQL *pMysqlHandler, ST_PET *pstPet)
 {
     VOS_INT32  dwRetVal = VOS_OK;
     MYSQL_RES  *pMysqlResult  = VOS_NULL;
     MYSQL_ROW  row;
+    VOS_UINT32 udwFieldIndex = VOS_NULL;
+    VOS_UINT32 udwNumFields = VOS_NULL;
 
     dwRetVal = mysql_query(pMysqlHandler, "SELECT * from pet");
     if(VOS_SUCCESS != dwRetVal)
@@ -107,39 +137,20 @@ VOS_VOID DbApiGetPet(MYSQL *pMysqlHandler, ST_PET *pstPet)
     }
 
     row = mysql_fetch_row(pMysqlResult);
+    udwNumFields = mysql_num_fields(pMysqlResult);
 
-    if(0 != row[0])
+    for(udwFieldIndex = 0; udwFieldIndex < udwNumFields; udwFieldIndex++)
     {
-        strcpy(pstPet->szName, row[0]);
-    }
-
-    if(0 != row[1])
-    {
-        strcpy(pstPet->szOwner, row[1]);
-    }
-
-    if(0 != row[2])
-    {
-        strcpy(pstPet->szSpecies, row[2]);
-    }
-
-    if(0 != row[3])
-    {
-        strcpy(pstPet->szSex, row[3]);
-    }
-
-    if(0 != row[4])
-    {
-        strcpy(pstPet->szBirth, row[4]);
-    }
-
-    if(0 != row[5])
-    {
-        strcpy(pstPet->szDeath, row[5]);
+        if(ENUM_CHAR == g_astPetAttr[udwFieldIndex].col_type)
+        {
+            ConvertColToChar(row[udwFieldIndex], (void *)pstPet + g_astPetAttr[udwFieldIndex].offset);
+        }
     }
 
     mysql_free_result(pMysqlResult);
 }
+
+
 
 void PrintPet(ST_PET *pstPet)
 {
