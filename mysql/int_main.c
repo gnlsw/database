@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include<string.h>
 #include <mysql/mysql.h>
 
 #define VOS_NULL    0
@@ -27,12 +28,31 @@ typedef enum {
     ENUM_INT,
 } ENUM_COL_TYPE;
 
+#define PET_NAME_LEN    21
+#define PET_OWNER_LEN   21
+#define PET_SPECIES_LEN 21
+#define PET_SEX_LEN     2
+#define PET_BIRTH_LEN   11
+#define PET_DEATH_LEN   11
+
+typedef struct ST_PET {
+    VOS_CHAR    szName[PET_NAME_LEN];
+    VOS_CHAR    szOwner[PET_OWNER_LEN];
+    VOS_CHAR    szSpecies[PET_SPECIES_LEN];
+    VOS_CHAR    szSex[PET_SEX_LEN];
+    VOS_CHAR    szBirth[PET_BIRTH_LEN];
+    VOS_CHAR    szDeath[PET_DEATH_LEN];
+} ST_PET;
+
 MYSQL *OpenDatabase();
+VOS_VOID DbApiGetPet(MYSQL *pMysqlHandler, ST_PET *pstPet);
+void PrintPet(ST_PET *pstPet);
 VOS_VOID VOS_SqlQuery(MYSQL *pMysqlHandler, VOS_CHAR *pcStmt);
 
 int main()
 {
     MYSQL      *pMysqlHandler = VOS_NULL;
+    ST_PET     stPet;
 
     pMysqlHandler = OpenDatabase();
     if(VOS_NULL == pMysqlHandler)
@@ -59,7 +79,81 @@ int main()
     VOS_SqlQuery(pMysqlHandler, "SELECT * from pet");
     printf("\n");
 
+    memset(&stPet, 0, sizeof(stPet));
+    DbApiGetPet(pMysqlHandler, &stPet);
+    PrintPet(&stPet);
+
     return 0;
+}
+
+VOS_VOID DbApiGetPet(MYSQL *pMysqlHandler, ST_PET *pstPet)
+{
+    VOS_INT32  dwRetVal = VOS_OK;
+    MYSQL_RES  *pMysqlResult  = VOS_NULL;
+    MYSQL_ROW  row;
+
+    dwRetVal = mysql_query(pMysqlHandler, "SELECT * from pet");
+    if(VOS_SUCCESS != dwRetVal)
+    {
+        printf("mysql_query failed, ret val = %d\n", dwRetVal);
+        return;
+    }
+
+    pMysqlResult = mysql_store_result(pMysqlHandler);
+    if(VOS_NULL == pMysqlResult)
+    {
+        printf("MYSQL RES is NULL\n");
+        return;
+    }
+
+    row = mysql_fetch_row(pMysqlResult);
+
+    if(0 != row[0])
+    {
+        strcpy(pstPet->szName, row[0]);
+    }
+
+    if(0 != row[1])
+    {
+        strcpy(pstPet->szOwner, row[1]);
+    }
+
+    if(0 != row[2])
+    {
+        strcpy(pstPet->szSpecies, row[2]);
+    }
+
+    if(0 != row[3])
+    {
+        strcpy(pstPet->szSex, row[3]);
+    }
+
+    if(0 != row[4])
+    {
+        strcpy(pstPet->szBirth, row[4]);
+    }
+
+    if(0 != row[5])
+    {
+        strcpy(pstPet->szDeath, row[5]);
+    }
+
+    mysql_free_result(pMysqlResult);
+}
+
+void PrintPet(ST_PET *pstPet)
+{
+    printf("name = %s, owner = %s, species = %s, sex = %s\n",
+        pstPet->szName, pstPet->szOwner, pstPet->szSpecies, pstPet->szSex);
+
+    printf("birth = %s", pstPet->szBirth);
+    if(0 != pstPet->szDeath[0])
+    {
+        printf("death = %s", pstPet->szDeath);
+    }
+    printf("\n");
+
+    return;
 }
 
 MYSQL *OpenDatabase()
